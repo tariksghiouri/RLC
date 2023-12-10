@@ -70,43 +70,43 @@ class Agent(object):
         self.model = Model(inputs=[input_layer], outputs=[output_layer])
         self.model.compile(optimizer=optimizer, loss='mse', metrics=['mae'])
 
-    def init_conv_network(self):
-        """
-        Initialize a convolutional neural network
-        Returns:
 
-        """
-        optimizer = SGD(lr=self.lr, momentum=0.0, decay=0.0, nesterov=False)
-        input_layer = Input(shape=(8, 8, 8), name='board_layer')
-        inter_layer_1 = Conv2D(1, (1, 1), data_format="channels_first")(input_layer)  # 1,8,8
-        inter_layer_2 = Conv2D(1, (1, 1), data_format="channels_first")(input_layer)  # 1,8,8
-        flat_1 = Reshape(target_shape=(1, 64))(inter_layer_1)
-        flat_2 = Reshape(target_shape=(1, 64))(inter_layer_2)
-        output_dot_layer = Dot(axes=1)([flat_1, flat_2])
-        output_layer = Reshape(target_shape=(4096,))(output_dot_layer)
-        self.model = Model(inputs=[input_layer], outputs=[output_layer])
-        self.model.compile(optimizer=optimizer, loss='mse', metrics=['mae'])
+def init_conv_network(self):
+    """
+    Initialize a convolutional neural network
+    Returns:
+    """
+    optimizer = SGD(learning_rate=self.lr, momentum=0.0, nesterov=False)
+    input_layer = Input(shape=(8, 8, 8), name='board_layer')
+    inter_layer_1 = Conv2D(1, (1, 1), data_format="channels_first")(input_layer)  # 1,8,8
+    inter_layer_2 = Conv2D(1, (1, 1), data_format="channels_first")(input_layer)  # 1,8,8
+    flat_1 = Reshape(target_shape=(1, 64))(inter_layer_1)
+    flat_2 = Reshape(target_shape=(1, 64))(inter_layer_2)
+    output_dot_layer = Dot(axes=1)([flat_1, flat_2])
+    output_layer = Reshape(target_shape=(4096,))(output_dot_layer)
+    self.model = Model(inputs=[input_layer], outputs=[output_layer])
+    self.model.compile(optimizer=optimizer, loss='mse', metrics=['mae'])
 
-    def init_conv_pg(self):
-        """
-        Convnet net for policy gradients
-        Returns:
+def init_conv_pg(self):
+    """
+    Convnet net for policy gradients
+    Returns:
+    """
+    optimizer = SGD(learning_rate=self.lr, momentum=0.0, nesterov=False)
+    input_layer = Input(shape=(8, 8, 8), name='board_layer')
+    R = Input(shape=(1,), name='Rewards')
+    legal_moves = Input(shape=(4096,), name='legal_move_mask')
+    inter_layer_1 = Conv2D(1, (1, 1), data_format="channels_first")(input_layer)  # 1,8,8
+    inter_layer_2 = Conv2D(1, (1, 1), data_format="channels_first")(input_layer)  # 1,8,8
+    flat_1 = Reshape(target_shape=(1, 64))(inter_layer_1)
+    flat_2 = Reshape(target_shape=(1, 64))(inter_layer_2)
+    output_dot_layer = Dot(axes=1)([flat_1, flat_2])
+    output_layer = Reshape(target_shape=(4096,))(output_dot_layer)
+    softmax_layer = Activation('softmax')(output_layer)
+    legal_softmax_layer = Multiply()([legal_moves, softmax_layer])  # Select legal moves
+    self.model = Model(inputs=[input_layer, R, legal_moves], outputs=[legal_softmax_layer])
+    self.model.compile(optimizer=optimizer, loss=policy_gradient_loss(R))
 
-        """
-        optimizer = SGD(lr=self.lr, momentum=0.0, decay=0.0, nesterov=False)
-        input_layer = Input(shape=(8, 8, 8), name='board_layer')
-        R = Input(shape=(1,), name='Rewards')
-        legal_moves = Input(shape=(4096,), name='legal_move_mask')
-        inter_layer_1 = Conv2D(1, (1, 1), data_format="channels_first")(input_layer)  # 1,8,8
-        inter_layer_2 = Conv2D(1, (1, 1), data_format="channels_first")(input_layer)  # 1,8,8
-        flat_1 = Reshape(target_shape=(1, 64))(inter_layer_1)
-        flat_2 = Reshape(target_shape=(1, 64))(inter_layer_2)
-        output_dot_layer = Dot(axes=1)([flat_1, flat_2])
-        output_layer = Reshape(target_shape=(4096,))(output_dot_layer)
-        softmax_layer = Activation('softmax')(output_layer)
-        legal_softmax_layer = Multiply()([legal_moves, softmax_layer])  # Select legal moves
-        self.model = Model(inputs=[input_layer, R, legal_moves], outputs=[legal_softmax_layer])
-        self.model.compile(optimizer=optimizer, loss=policy_gradient_loss(R))
 
     def network_update(self, minibatch):
         """
