@@ -76,7 +76,7 @@ def init_conv_network(self):
     Initialize a convolutional neural network
     Returns:
     """
-    optimizer = SGD(learning_rate=self.lr, momentum=0.0, nesterov=False)
+    optimizer = tf.keras.optimizers.SGD(learning_rate=self.lr, momentum=0.0, nesterov=False)
     input_layer = Input(shape=(8, 8, 8), name='board_layer')
     inter_layer_1 = Conv2D(1, (1, 1), data_format="channels_first")(input_layer)  # 1,8,8
     inter_layer_2 = Conv2D(1, (1, 1), data_format="channels_first")(input_layer)  # 1,8,8
